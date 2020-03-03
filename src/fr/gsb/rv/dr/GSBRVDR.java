@@ -9,7 +9,6 @@ import java.util.Optional;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -59,8 +58,7 @@ public class GSBRVDR extends Application {
         menuPraticiens.getItems().add(itemHesitant);
         barreMenus.getMenus().add(menuPraticiens);
         menuPraticiens.setDisable(!session);
-        itemQuitter.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
-         
+        itemQuitter.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));  
         
         itemSeConnecter.setOnAction((ActionEvent event) -> {
             session = true;
@@ -82,9 +80,9 @@ public class GSBRVDR extends Application {
         
         itemQuitter.setOnAction((ActionEvent event) -> {
             Alert alertQuitter = new Alert( Alert.AlertType.CONFIRMATION ) ;
-                alertQuitter.setTitle( "Quitter" );
-                alertQuitter.setHeaderText( "Demande de confirmation" );
-                alertQuitter.setContentText( "Voulez-vous quitter l'application ?" );
+                alertQuitter.setTitle("Quitter");
+                alertQuitter.setHeaderText("Demande de confirmation");
+                alertQuitter.setContentText("Voulez-vous quitter l'application ?");
                 alertQuitter.getButtonTypes().setAll(btnOui, btnNon);
                 Optional<ButtonType> result = alertQuitter.showAndWait();
                      if (result.get() == btnOui) {
