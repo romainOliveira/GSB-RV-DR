@@ -14,6 +14,12 @@ public class Visiteur {
     private String nom;
     private String prenom;
 
+    public Visiteur(String matricule, String nom, String prenom) {
+        this.matricule = matricule;
+        this.nom = nom;
+        this.prenom = prenom;
+    }
+
     public void setMatricule(String matricule) {
         this.matricule = matricule;
     }

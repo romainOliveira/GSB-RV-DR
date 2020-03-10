@@ -23,15 +23,19 @@ public class Session {
         Session.session = new Session(visiteur);
     }
     
-    public Session getSession() {
+    public static void fermer(){
+        Session.session = null;
+    }
+    
+    public static Session getSession() {
         return session;
     }
     
-    public Visiteur getLeVisiteur(){
+    public static Visiteur getLeVisiteur(){
         return leVisiteur ;
     }
     
-    public boolean estOuverte(){
+    public static boolean estOuverte(){
         return session != null ;
     }
     

@@ -22,6 +22,14 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import fr.gsb.rv.dr.entities.Visiteur;
+import fr.gsb.rv.dr.modeles.ModeleGsbRv;
+import fr.gsb.rv.dr.technique.Session;
+import fr.gsb.rv.dr.technique.ConnexionBD;
+import fr.gsb.rv.dr.technique.ConnexionException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.event.EventHandler;
 
 /**
  *
@@ -29,7 +37,10 @@ import javafx.scene.input.KeyCombination;
  */
 public class GSBRVDR extends Application {
     
-    boolean session = false;
+    boolean session = Session.estOuverte();
+    Visiteur visiteur = null;
+    //Visiteur visiteur = new Visiteur("OB001","BELLILI","Oumayma");
+    
     
     @Override
     public void start(Stage primaryStage) {
@@ -60,22 +71,38 @@ public class GSBRVDR extends Application {
         menuPraticiens.setDisable(!session);
         itemQuitter.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));  
         
-        itemSeConnecter.setOnAction((ActionEvent event) -> {
-            session = true;
-            itemSeDeconnecter.setDisable(!session);
-            itemSeConnecter.setDisable(session);
-            menuRapports.setDisable(!session);
-            menuPraticiens.setDisable(!session);
-            bp.setCenter(new Label("Se connecter"));
+        itemSeConnecter.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {              
+                
+                try {
+                    Visiteur visiteur = ModeleGsbRv.seConnecter("a131 ","azerty");
+                    Session.ouvrir(visiteur);
+                } catch (ConnexionException ex) {
+                    Logger.getLogger(GSBRVDR.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                
+                session = Session.estOuverte();
+                itemSeDeconnecter.setDisable(!session);
+                itemSeConnecter.setDisable(session);
+                menuRapports.setDisable(!session);
+                menuPraticiens.setDisable(!session);
+                primaryStage.setTitle("GSB-RV-DR | " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom());
+                bp.setCenter(new Label("Se connecter"));
+                System.out.println("[Connexion] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
+            }
         });
         
         itemSeDeconnecter.setOnAction((ActionEvent event) -> {
-            session = false;
+            Session.ouvrir(visiteur);
+            session = Session.estOuverte();
             itemSeDeconnecter.setDisable(!session);
             itemSeConnecter.setDisable(session);
             menuRapports.setDisable(!session);
             menuPraticiens.setDisable(!session);
+            primaryStage.setTitle("GSB-RV-DR");
             bp.setCenter(new Label("Se déconnecter"));
+            System.out.println("[Déconnexion] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
         });
         
         itemQuitter.setOnAction((ActionEvent event) -> {
@@ -87,16 +114,17 @@ public class GSBRVDR extends Application {
                 Optional<ButtonType> result = alertQuitter.showAndWait();
                      if (result.get() == btnOui) {
                          Platform.exit();
-                        System.out.println(session);
                      }
         });
         
         itemConsulter.setOnAction((ActionEvent event) -> {
             bp.setCenter(new Label("Consulter"));
+            System.out.println("[Rapports] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
         });
         
         itemHesitant.setOnAction((ActionEvent event) -> {
             bp.setCenter(new Label("Hésitant"));
+            System.out.println("[Praticiens] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
         });
         
         bp.setTop(barreMenus);
