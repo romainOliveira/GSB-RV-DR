@@ -31,7 +31,7 @@ public class Session {
         return session;
     }
     
-    public static Visiteur getLeVisiteur(){
+    public static Visiteur getVisiteur(){
         return leVisiteur ;
     }
     

@@ -5,130 +5,141 @@
  */
 package fr.gsb.rv.dr;
 
+import fr.gsb.rv.dr.entities.Visiteur;
+import fr.gsb.rv.dr.modeles.ModeleGsbRv;
+import fr.gsb.rv.dr.technique.ConnexionException;
+import fr.gsb.rv.dr.technique.Session;
+import java.sql.SQLException;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.scene.Scene;
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
-import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import fr.gsb.rv.dr.entities.Visiteur;
-import fr.gsb.rv.dr.modeles.ModeleGsbRv;
-import fr.gsb.rv.dr.technique.Session;
-import fr.gsb.rv.dr.technique.ConnexionBD;
-import fr.gsb.rv.dr.technique.ConnexionException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javafx.event.EventHandler;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
+import javafx.util.Pair;
 
 /**
  *
  * @author developpeur
  */
 public class GSBRVDR extends Application {
-    
-    boolean session = Session.estOuverte();
+//  Visiteur visiteur = new Visiteur("OB0041", "Oumayma", "BELLILI");
     Visiteur visiteur = null;
-    //Visiteur visiteur = new Visiteur("OB001","BELLILI","Oumayma");
-    
-    
+    boolean session = Session.estOuverte();
+
     @Override
-    public void start(Stage primaryStage) {
-        SeparatorMenuItem separatorQuitter = new SeparatorMenuItem();
+    public void start(Stage primaryStage) throws ConnexionException, SQLException {
+        PanneauPraticiens vuePraticiens = new PanneauPraticiens();
+        vuePraticiens.setStyle("-fx-background-color: white;");
+        PanneauRapports vueRapports = new PanneauRapports();
+        vueRapports.setStyle("-fx-background-color: white;");
+        PanneauAccueil vueAccueil = new PanneauAccueil();
+        vueAccueil.setStyle("-fx-background-color: white;");
+        StackPane panneaux = new StackPane();
+        panneaux.getChildren().add(vueAccueil);
+        panneaux.getChildren().add(vueRapports);
+        panneaux.getChildren().add(vuePraticiens);
         MenuBar barreMenus = new MenuBar();
         Menu menuFichier = new Menu("Fichier");
-        Menu menuRapports = new Menu("Rapports");
-        Menu menuPraticiens = new Menu("Praticiens");
         MenuItem itemSeConnecter = new MenuItem("Se connecter");
         MenuItem itemSeDeconnecter = new MenuItem("Se déconnecter");
+        itemSeDeconnecter.setDisable(!session);
         MenuItem itemQuitter = new MenuItem("Quitter");
-        MenuItem itemConsulter = new MenuItem("Consulter");
-        MenuItem itemHesitant = new MenuItem("Hésitant");
-        ButtonType btnOui = new ButtonType("Oui");
-        ButtonType btnNon = new ButtonType("Non");        
-        BorderPane bp = new BorderPane();
+        itemQuitter.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));
         menuFichier.getItems().add(itemSeConnecter);
         menuFichier.getItems().add(itemSeDeconnecter);
-        itemSeDeconnecter.setDisable(!session);
-        menuFichier.getItems().add(separatorQuitter);
         menuFichier.getItems().add(itemQuitter);
         barreMenus.getMenus().add(menuFichier);
+        Menu menuRapports = new Menu("Rapports");
+        MenuItem itemConsulter = new MenuItem("Consulter");
         menuRapports.getItems().add(itemConsulter);
         barreMenus.getMenus().add(menuRapports);
         menuRapports.setDisable(!session);
-        menuPraticiens.getItems().add(itemHesitant);
+        Menu menuPraticiens = new Menu("Praticiens");
+        MenuItem itemHesitants = new MenuItem("Hésitants");
+        menuPraticiens.getItems().add(itemHesitants);
         barreMenus.getMenus().add(menuPraticiens);
         menuPraticiens.setDisable(!session);
-        itemQuitter.setAccelerator(new KeyCodeCombination(KeyCode.X, KeyCombination.CONTROL_DOWN));  
-        
-        itemSeConnecter.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {              
-                
-                try {
-                    Visiteur visiteur = ModeleGsbRv.seConnecter("a131 ","azerty");
-                    Session.ouvrir(visiteur);
+        BorderPane root = new BorderPane();
+        root.setTop(barreMenus);
+        vueAccueil.setVisible(true);
+        vuePraticiens.setVisible(false);
+        vueRapports.setVisible(false);
+        root.setCenter(panneaux);
+        itemSeConnecter.setOnAction(actionEvent -> {
+            VueConnexion vue = new VueConnexion();
+            Optional<Pair<String, String>> reponse = vue.showAndWait();
+            if (reponse.isPresent()) {
+                try {   //TEST 3.4
+                    String[] resultat = reponse.get().toString().split("=");
+                    visiteur = ModeleGsbRv.seConnecter(resultat[0], resultat[1]);
                 } catch (ConnexionException ex) {
                     Logger.getLogger(GSBRVDR.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
-                session = Session.estOuverte();
-                itemSeDeconnecter.setDisable(!session);
-                itemSeConnecter.setDisable(session);
-                menuRapports.setDisable(!session);
-                menuPraticiens.setDisable(!session);
-                primaryStage.setTitle("GSB-RV-DR | " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom());
-                bp.setCenter(new Label("Se connecter"));
-                System.out.println("[Connexion] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
+                if (visiteur != null) {
+                    Session.ouvrir(visiteur);
+                    session = Session.estOuverte();
+                    primaryStage.setTitle("GSB-RV-DR " + Session.getVisiteur().getNom() + " " + Session.getVisiteur().getPrenom());
+                    itemSeConnecter.setDisable(session);
+                    itemSeDeconnecter.setDisable(!session);
+                    menuRapports.setDisable(!session);
+                    menuPraticiens.setDisable(!session);
+                } else {
+                    Alert dlgNok = new Alert (Alert.AlertType.ERROR);
+                    dlgNok.setTitle ("Erreur");
+                    dlgNok.setHeaderText("Connexion annulée :");
+                    dlgNok.setContentText("Matricule ou mot de passe incorrecte!");
+                    dlgNok.showAndWait();
+                }
             }
         });
-        
-        itemSeDeconnecter.setOnAction((ActionEvent event) -> {
-            Session.ouvrir(visiteur);
+        itemSeDeconnecter.setOnAction(actionEvent -> {
+            vueRapports.setVisible(false);
+            vueAccueil.setVisible(true);
+            vuePraticiens.setVisible(false);
+            Session.fermer();
             session = Session.estOuverte();
-            itemSeDeconnecter.setDisable(!session);
+            primaryStage.setTitle("GSB-RV-DR");
             itemSeConnecter.setDisable(session);
+            itemSeDeconnecter.setDisable(!session);
             menuRapports.setDisable(!session);
             menuPraticiens.setDisable(!session);
-            primaryStage.setTitle("GSB-RV-DR");
-            bp.setCenter(new Label("Se déconnecter"));
-            System.out.println("[Déconnexion] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
         });
-        
-        itemQuitter.setOnAction((ActionEvent event) -> {
-            Alert alertQuitter = new Alert( Alert.AlertType.CONFIRMATION ) ;
-                alertQuitter.setTitle("Quitter");
-                alertQuitter.setHeaderText("Demande de confirmation");
-                alertQuitter.setContentText("Voulez-vous quitter l'application ?");
-                alertQuitter.getButtonTypes().setAll(btnOui, btnNon);
-                Optional<ButtonType> result = alertQuitter.showAndWait();
-                     if (result.get() == btnOui) {
-                         Platform.exit();
-                     }
+        itemQuitter.setOnAction(actionEvent -> {
+            Alert alert = new Alert (Alert.AlertType.CONFIRMATION);
+            ButtonType btnOui = new ButtonType ("Oui");
+            ButtonType btnNon = new ButtonType ("Non");
+            alert.setTitle("Quitter");
+            alert.setHeaderText("Demande de confirmation");
+            alert.setContentText("Êtes vous sûr de vouloir quitter l'application?");
+            alert.getButtonTypes().setAll(btnNon, btnOui);
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == btnOui) {
+                Platform.exit();
+            }
         });
-        
-        itemConsulter.setOnAction((ActionEvent event) -> {
-            bp.setCenter(new Label("Consulter"));
-            System.out.println("[Rapports] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
+        itemConsulter.setOnAction(actionEvent -> {
+            vueRapports.setVisible(true);
+            vueAccueil.setVisible(false);
+            vuePraticiens.setVisible(false);
         });
-        
-        itemHesitant.setOnAction((ActionEvent event) -> {
-            bp.setCenter(new Label("Hésitant"));
-            System.out.println("[Praticiens] " + Session.getLeVisiteur().getNom() + " " + Session.getLeVisiteur().getPrenom() );
+        itemHesitants.setOnAction(actionEvent -> {
+            vueRapports.setVisible(false);
+            vueAccueil.setVisible(false);
+            vuePraticiens.setVisible(true);
         });
-        
-        bp.setTop(barreMenus);
-        Scene scene = new Scene(bp, 500, 250);
+        Scene scene = new Scene(root, 500, 400);
         primaryStage.setTitle("GSB-RV-DR");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -140,5 +151,4 @@ public class GSBRVDR extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
 }
