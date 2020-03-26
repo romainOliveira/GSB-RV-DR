@@ -5,11 +5,17 @@
  */
 package fr.gsb.rv.dr;
 
+import fr.gsb.rv.dr.entities.Praticien;
 import fr.gsb.rv.dr.entities.Visiteur;
 import fr.gsb.rv.dr.modeles.ModeleGsbRv;
 import fr.gsb.rv.dr.technique.ConnexionException;
 import fr.gsb.rv.dr.technique.Session;
+import fr.gsb.rv.dr.utilitaires.ComparateurCoefConfiance;
+import fr.gsb.rv.dr.utilitaires.ComparateurCoefNotoriete;
+import fr.gsb.rv.dr.utilitaires.ComparateurDateVisite;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,12 +40,27 @@ import javafx.util.Pair;
  * @author developpeur
  */
 public class GSBRVDR extends Application {
-//  Visiteur visiteur = new Visiteur("OB0041", "Oumayma", "BELLILI");
     Visiteur visiteur = null;
     boolean session = Session.estOuverte();
 
     @Override
     public void start(Stage primaryStage) throws ConnexionException, SQLException {
+        List<Praticien> praticiens = ModeleGsbRv.getPraticiensHesitants();
+        for (Praticien unPraticien : praticiens) {
+            System.out.println(unPraticien);
+        }
+        Collections.sort(praticiens, new ComparateurCoefConfiance());
+        for (Praticien unPraticien : praticiens) {
+            System.out.println(unPraticien);
+        }
+        Collections.sort(praticiens, new ComparateurCoefNotoriete());
+        for (Praticien unPraticien : praticiens) {
+            System.out.println(unPraticien);
+        }
+        Collections.sort(praticiens, new ComparateurDateVisite());
+        for (Praticien unPraticien : praticiens) {
+            System.out.println(unPraticien);
+        }
         PanneauPraticiens vuePraticiens = new PanneauPraticiens();
         vuePraticiens.setStyle("-fx-background-color: white;");
         PanneauRapports vueRapports = new PanneauRapports();
@@ -81,7 +102,7 @@ public class GSBRVDR extends Application {
             VueConnexion vue = new VueConnexion();
             Optional<Pair<String, String>> reponse = vue.showAndWait();
             if (reponse.isPresent()) {
-                try {
+                try {   //TEST 3.4
                     String[] resultat = reponse.get().toString().split("=");
                     visiteur = ModeleGsbRv.seConnecter(resultat[0], resultat[1]);
                 } catch (ConnexionException ex) {
@@ -99,7 +120,7 @@ public class GSBRVDR extends Application {
                     Alert dlgNok = new Alert (Alert.AlertType.ERROR);
                     dlgNok.setTitle ("Erreur");
                     dlgNok.setHeaderText("Connexion annulée :");
-                    dlgNok.setContentText("Matricule ou mot de passe incorrecte !");
+                    dlgNok.setContentText("Matricule ou mot de passe incorrecte!");
                     dlgNok.showAndWait();
                 }
             }
@@ -122,7 +143,7 @@ public class GSBRVDR extends Application {
             ButtonType btnNon = new ButtonType ("Non");
             alert.setTitle("Quitter");
             alert.setHeaderText("Demande de confirmation");
-            alert.setContentText("Voulez vous vraiment quitter l'application ?");
+            alert.setContentText("Êtes vous sûr de vouloir quitter l'application?");
             alert.getButtonTypes().setAll(btnNon, btnOui);
             Optional<ButtonType> result = alert.showAndWait();
             if (result.get() == btnOui) {
