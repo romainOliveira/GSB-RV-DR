@@ -5,17 +5,11 @@
  */
 package fr.gsb.rv.dr;
 
-import fr.gsb.rv.dr.entities.Praticien;
 import fr.gsb.rv.dr.entities.Visiteur;
 import fr.gsb.rv.dr.modeles.ModeleGsbRv;
 import fr.gsb.rv.dr.technique.ConnexionException;
 import fr.gsb.rv.dr.technique.Session;
-import fr.gsb.rv.dr.utilitaires.ComparateurCoefConfiance;
-import fr.gsb.rv.dr.utilitaires.ComparateurCoefNotoriete;
-import fr.gsb.rv.dr.utilitaires.ComparateurDateVisite;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,37 +34,22 @@ import javafx.util.Pair;
  * @author developpeur
  */
 public class GSBRVDR extends Application {
-    Visiteur visiteur = null;
+//    Visiteur visiteur = new Visiteur("OB0041", "Oumayma", "BELLILI"); //TEST 2-4
+    Visiteur visiteur = null; //TEST 2-8 et TEST 3-4
     boolean session = Session.estOuverte();
 
     @Override
     public void start(Stage primaryStage) throws ConnexionException, SQLException {
-        List<Praticien> praticiens = ModeleGsbRv.getPraticiensHesitants();
-        for (Praticien unPraticien : praticiens) {
-            System.out.println(unPraticien);
-        }
-        Collections.sort(praticiens, new ComparateurCoefConfiance());
-        for (Praticien unPraticien : praticiens) {
-            System.out.println(unPraticien);
-        }
-        Collections.sort(praticiens, new ComparateurCoefNotoriete());
-        for (Praticien unPraticien : praticiens) {
-            System.out.println(unPraticien);
-        }
-        Collections.sort(praticiens, new ComparateurDateVisite());
-        for (Praticien unPraticien : praticiens) {
-            System.out.println(unPraticien);
-        }
         PanneauPraticiens vuePraticiens = new PanneauPraticiens();
-        vuePraticiens.setStyle("-fx-background-color: white;");
+        vuePraticiens.getPane().setStyle("-fx-background-color: white;");
         PanneauRapports vueRapports = new PanneauRapports();
-        vueRapports.setStyle("-fx-background-color: white;");
+        vueRapports.getPane().setStyle("-fx-background-color: white;");
         PanneauAccueil vueAccueil = new PanneauAccueil();
-        vueAccueil.setStyle("-fx-background-color: white;");
+        vueAccueil.getPane().setStyle("-fx-background-color: white;");
         StackPane panneaux = new StackPane();
-        panneaux.getChildren().add(vueAccueil);
-        panneaux.getChildren().add(vueRapports);
-        panneaux.getChildren().add(vuePraticiens);
+        panneaux.getChildren().add(vueAccueil.getPane());
+        panneaux.getChildren().add(vueRapports.getPane());
+        panneaux.getChildren().add(vuePraticiens.getPane());
         MenuBar barreMenus = new MenuBar();
         Menu menuFichier = new Menu("Fichier");
         MenuItem itemSeConnecter = new MenuItem("Se connecter");
@@ -94,15 +73,15 @@ public class GSBRVDR extends Application {
         menuPraticiens.setDisable(!session);
         BorderPane root = new BorderPane();
         root.setTop(barreMenus);
-        vueAccueil.setVisible(true);
-        vuePraticiens.setVisible(false);
-        vueRapports.setVisible(false);
+        vueAccueil.getPane().setVisible(true);
+        vuePraticiens.getPane().setVisible(false);
+        vueRapports.getPane().setVisible(false);
         root.setCenter(panneaux);
         itemSeConnecter.setOnAction(actionEvent -> {
             VueConnexion vue = new VueConnexion();
             Optional<Pair<String, String>> reponse = vue.showAndWait();
             if (reponse.isPresent()) {
-                try {   //TEST 3.4
+                try {
                     String[] resultat = reponse.get().toString().split("=");
                     visiteur = ModeleGsbRv.seConnecter(resultat[0], resultat[1]);
                 } catch (ConnexionException ex) {
@@ -126,9 +105,9 @@ public class GSBRVDR extends Application {
             }
         });
         itemSeDeconnecter.setOnAction(actionEvent -> {
-            vueRapports.setVisible(false);
-            vueAccueil.setVisible(true);
-            vuePraticiens.setVisible(false);
+            vueRapports.getPane().setVisible(false);
+            vueAccueil.getPane().setVisible(true);
+            vuePraticiens.getPane().setVisible(false);
             Session.fermer();
             session = Session.estOuverte();
             primaryStage.setTitle("GSB-RV-DR");
@@ -151,14 +130,14 @@ public class GSBRVDR extends Application {
             }
         });
         itemConsulter.setOnAction(actionEvent -> {
-            vueRapports.setVisible(true);
-            vueAccueil.setVisible(false);
-            vuePraticiens.setVisible(false);
+            vueRapports.getPane().setVisible(true);
+            vueAccueil.getPane().setVisible(false);
+            vuePraticiens.getPane().setVisible(false);
         });
         itemHesitants.setOnAction(actionEvent -> {
-            vueRapports.setVisible(false);
-            vueAccueil.setVisible(false);
-            vuePraticiens.setVisible(true);
+            vueRapports.getPane().setVisible(false);
+            vueAccueil.getPane().setVisible(false);
+            vuePraticiens.getPane().setVisible(true);
         });
         Scene scene = new Scene(root, 500, 400);
         primaryStage.setTitle("GSB-RV-DR");
